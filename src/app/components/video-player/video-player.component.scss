@@ -1,0 +1,117 @@
+.player-wrapper {
+  background: #14171f;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-el {
+  width: 100%;
+  max-height: 420px;
+  background: #000;
+  display: block;
+  object-fit: contain;
+}
+
+.controls {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #1a1d27;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &--secondary {
+    padding-left: 2px;
+  }
+}
+
+// ── Buttons ────────────────────────────────────────────────────────────
+
+.btn-icon {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+}
+
+.btn-play {
+  width: 34px;
+  height: 34px;
+}
+
+// ── Time display ──────────────────────────────────────────────────────
+
+.time-display {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #9ca3af;
+  white-space: nowrap;
+  min-width: 84px;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Range inputs ──────────────────────────────────────────────────────
+
+.seek-bar {
+  flex: 1;
+  cursor: pointer;
+  accent-color: #4f8ef7;
+  height: 4px;
+}
+
+.volume-slider {
+  width: 80px;
+  cursor: pointer;
+  accent-color: #4f8ef7;
+  height: 4px;
+}
+
+// ── Speed selector ────────────────────────────────────────────────────
+
+.speed-selector {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.btn-speed {
+  background: #252833;
+  border: 1px solid #3a3f4b;
+  color: #9ca3af;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+
+  &:hover {
+    background: #3a3f4b;
+    color: #e5e7eb;
+  }
+
+  &.active {
+    background: #4f8ef7;
+    border-color: #4f8ef7;
+    color: #fff;
+    font-weight: 600;
+  }
+}

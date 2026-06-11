@@ -1,0 +1,21 @@
+.app-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e5e7eb;
+  letter-spacing: -0.02em;
+}

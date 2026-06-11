@@ -2,15 +2,17 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ThumbnailService {
-  extract(url: string, seekTo = 1): Promise<string> {
+  /** Extract a thumbnail frame and video duration in a single video decode. */
+  extractWithDuration(url: string, seekTo = 1): Promise<{ thumbnail: string; duration: number }> {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
+      let duration = 0;
 
       const cleanup = () => {
         video.removeEventListener('seeked', onSeeked);
         video.removeEventListener('error', onError);
         video.src = '';
-        video.load(); // release media resource
+        video.load();
       };
 
       const onSeeked = () => {
@@ -24,20 +26,19 @@ export class ThumbnailService {
           return;
         }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg'));
+        resolve({ thumbnail: canvas.toDataURL('image/jpeg'), duration });
       };
 
       const onError = () => {
         cleanup();
-        reject(new Error('Failed to load video for thumbnail'));
+        reject(new Error('Failed to load video'));
       };
 
-      // Set currentTime only after metadata is loaded so the seek is valid.
-      // Clamp to 10% of duration to handle clips shorter than seekTo.
+      // Capture duration once metadata is ready, then seek to the thumbnail frame.
+      // Clamp to 10% of duration so very short clips still get a frame.
       video.addEventListener('loadedmetadata', () => {
-        video.currentTime = video.duration > 0
-          ? Math.min(seekTo, video.duration * 0.1)
-          : 0;
+        duration = video.duration;
+        video.currentTime = duration > 0 ? Math.min(seekTo, duration * 0.1) : 0;
       }, { once: true });
 
       video.addEventListener('seeked', onSeeked);
@@ -45,5 +46,10 @@ export class ThumbnailService {
       video.crossOrigin = 'anonymous';
       video.src = url;
     });
+  }
+
+  /** Extract only a thumbnail frame (no duration). */
+  extract(url: string, seekTo = 1): Promise<string> {
+    return this.extractWithDuration(url, seekTo).then(({ thumbnail }) => thumbnail);
   }
 }
