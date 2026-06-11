@@ -1,24 +1,32 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { VideoClip } from '../models/video-clip.model';
+import { VideoClip, TrimRange } from '../models/video-clip.model';
 
 @Injectable({ providedIn: 'root' })
 export class VideoStateService {
-  // Core video state
   clip = signal<VideoClip | null>(null);
   currentTime = signal(0);
   isPlaying = signal(false);
   volume = signal(1);
   playbackRate = signal(1);
 
-  // Trim state
   trimStart = signal(0);
   trimEnd = signal(0);
 
-  // Computed helpers
   duration = computed(() => this.clip()?.duration ?? 0);
-  trimDuration = computed(() => this.trimEnd() - this.trimStart());
+
+  // Clamped to 0 — prevents negative duration if handles cross
+  trimDuration = computed(() => Math.max(0, this.trimEnd() - this.trimStart()));
+
+  // Typed as TrimRange | null — null when no clip is loaded (distinguishes uninitialised from zero-length)
+  trimRange = computed<TrimRange | null>(() =>
+    this.clip() ? { start: this.trimStart(), end: this.trimEnd() } : null
+  );
 
   setClip(clip: VideoClip) {
+    if (clip.duration <= 0) {
+      console.warn('VideoStateService: ignored clip with invalid duration', clip.duration);
+      return;
+    }
     this.clip.set(clip);
     this.trimStart.set(0);
     this.trimEnd.set(clip.duration);
@@ -32,5 +40,7 @@ export class VideoStateService {
     this.isPlaying.set(false);
     this.trimStart.set(0);
     this.trimEnd.set(0);
+    this.volume.set(1);
+    this.playbackRate.set(1);
   }
 }
