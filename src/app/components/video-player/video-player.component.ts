@@ -1,6 +1,8 @@
-import { Component, inject, OnDestroy, viewChild, ElementRef, effect, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, viewChild, ElementRef, effect, signal } from '@angular/core';
 import { VideoStateService } from '../../services/video-state.service';
 import { formatTime } from '../../utils/time.utils';
+
+const FRAME_MARKERS = Array.from({ length: 11 }, (_, i) => ((i + 1) / 12) * 100);
 
 @Component({
   selector: 'app-video-player',
@@ -14,21 +16,64 @@ export class VideoPlayerComponent implements OnDestroy {
 
   videoEl = viewChild<ElementRef<HTMLVideoElement>>('videoEl');
 
-  clip = this.state.clip;
-  isPlaying = this.state.isPlaying;
-  volume = this.state.volume;
+  clip        = this.state.clip;
+  isPlaying   = this.state.isPlaying;
+  volume      = this.state.volume;
   playbackRate = this.state.playbackRate;
   currentTime = this.state.currentTime;
-  duration = this.state.duration;
+  duration    = this.state.duration;
+  trimStart   = this.state.trimStart;
+  trimEnd     = this.state.trimEnd;
+
   isMuted = signal(false);
 
   readonly speeds = [0.5, 1, 1.5, 2];
 
   private rafId: number | null = null;
-  private isSeeking = false;
+
+  // ── Computed display values ───────────────────────────────────────────
+
+  readonly playheadPct = computed(() => {
+    const dur = this.duration();
+    return dur > 0 ? (this.currentTime() / dur) * 100 : 0;
+  });
+
+  readonly trimLeftPct = computed(() => {
+    const dur = this.duration();
+    return dur > 0 ? (this.trimStart() / dur) * 100 : 0;
+  });
+
+  readonly trimRightPct = computed(() => {
+    const dur = this.duration();
+    return dur > 0 ? ((dur - this.trimEnd()) / dur) * 100 : 0;
+  });
+
+  readonly ticks = computed(() => {
+    const dur = this.duration();
+    if (dur <= 0) return [];
+    let interval: number;
+    if (dur <= 30) interval = 4;
+    else if (dur <= 90) interval = 10;
+    else if (dur <= 300) interval = 30;
+    else interval = 60;
+    const result: { label: string; pct: number }[] = [];
+    for (let t = 0; t <= dur; t += interval) {
+      result.push({ label: formatTime(t), pct: (t / dur) * 100 });
+    }
+    return result;
+  });
+
+  readonly frameMarkers = FRAME_MARKERS;
+
+  readonly exportPreview = computed(() => {
+    const range = this.state.trimRange();
+    if (!range) return '';
+    return `{ "start": ${range.start.toFixed(1)}, "end": ${range.end.toFixed(1)} }`;
+  });
+
+  readonly formatTime = formatTime;
 
   constructor() {
-    // Load new video source whenever the clip changes
     effect(() => {
       const c = this.clip();
       const video = this.videoEl()?.nativeElement;
@@ -37,21 +82,18 @@ export class VideoPlayerComponent implements OnDestroy {
       if (c) video.load();
     });
 
-    // Keep volume in sync
     effect(() => {
       const vol = this.volume();
       const video = this.videoEl()?.nativeElement;
       if (video) video.volume = vol;
     });
 
-    // Keep playback rate in sync
     effect(() => {
       const rate = this.playbackRate();
       const video = this.videoEl()?.nativeElement;
       if (video) video.playbackRate = rate;
     });
 
-    // Drive play / pause from signal
     effect(() => {
       const playing = this.isPlaying();
       const video = this.videoEl()?.nativeElement;
@@ -66,32 +108,27 @@ export class VideoPlayerComponent implements OnDestroy {
     });
   }
 
+  // ── Playback ──────────────────────────────────────────────────────────
+
   togglePlay() {
     if (!this.clip()) return;
     this.state.isPlaying.set(!this.state.isPlaying());
   }
 
-  // ── Seek ──────────────────────────────────────────────────────────────
-
-  onSeekStart() {
-    this.isSeeking = true;
-    this.stopRaf();
-  }
-
-  onSeeking(event: Event) {
-    const time = Number.parseFloat((event.target as HTMLInputElement).value);
+  skipBack() {
     const video = this.videoEl()?.nativeElement;
-    if (video) video.currentTime = time;
+    if (!video) return;
+    const time = Math.max(0, video.currentTime - 5);
+    video.currentTime = time;
     this.state.currentTime.set(time);
   }
 
-  onSeekEnd(event: Event) {
-    this.isSeeking = false;
-    const time = Number.parseFloat((event.target as HTMLInputElement).value);
+  skipForward() {
     const video = this.videoEl()?.nativeElement;
-    if (video) video.currentTime = time;
+    if (!video) return;
+    const time = Math.min(this.duration(), video.currentTime + 5);
+    video.currentTime = time;
     this.state.currentTime.set(time);
-    if (this.isPlaying()) this.startRaf();
   }
 
   // ── Volume ────────────────────────────────────────────────────────────
@@ -114,8 +151,40 @@ export class VideoPlayerComponent implements OnDestroy {
 
   // ── Speed ─────────────────────────────────────────────────────────────
 
-  setSpeed(rate: number) {
-    this.state.playbackRate.set(rate);
+  onSpeedChange(event: Event) {
+    const val = Number.parseFloat((event.target as HTMLSelectElement).value);
+    this.state.playbackRate.set(val);
+  }
+
+  // ── Timeline seek ─────────────────────────────────────────────────────
+
+  onTimelineClick(event: MouseEvent) {
+    const dur = this.duration();
+    if (dur <= 0) return;
+    const el = event.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const time = pct * dur;
+    const video = this.videoEl()?.nativeElement;
+    if (video) video.currentTime = time;
+    this.state.currentTime.set(time);
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────
+
+  exportTrimJson() {
+    const range = this.state.trimRange();
+    if (!range) return;
+    const json = JSON.stringify({ start: +range.start.toFixed(1), end: +range.end.toFixed(1) }, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'trim.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   }
 
   // ── Video events ──────────────────────────────────────────────────────
@@ -127,15 +196,13 @@ export class VideoPlayerComponent implements OnDestroy {
     if (video) video.currentTime = 0;
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────
-
-  readonly formatTime = formatTime;
+  // ── RAF loop ──────────────────────────────────────────────────────────
 
   private startRaf() {
     if (this.rafId !== null) return;
     const tick = () => {
       const video = this.videoEl()?.nativeElement;
-      if (video && !video.paused && !this.isSeeking) {
+      if (video && !video.paused) {
         this.state.currentTime.set(video.currentTime);
       }
       if (this.state.isPlaying()) {

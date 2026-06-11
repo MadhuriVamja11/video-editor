@@ -1,21 +1,39 @@
-.app-container {
-  max-width: 900px;
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 32px 24px 48px;
+  width: 100%;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #12141d;
+  border-right: 1px solid #1e2235;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  overflow-y: auto;
 }
 
-.app-header {
+.sidebar-brand {
+  padding: 18px 16px 14px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  color: #4f8ef7;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid #1e2235;
+  flex-shrink: 0;
 }
 
-.app-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #e5e7eb;
-  letter-spacing: -0.02em;
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
 }

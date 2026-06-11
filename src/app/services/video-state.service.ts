@@ -23,7 +23,7 @@ export class VideoStateService {
   );
 
   setClip(clip: VideoClip) {
-    if (clip.duration <= 0) {
+    if (clip.duration <= 0 || !Number.isFinite(clip.duration)) {
       console.warn('VideoStateService: ignored clip with invalid duration', clip.duration);
       return;
     }
