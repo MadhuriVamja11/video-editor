@@ -1,4 +1,4 @@
-// ── Host (participates in parent flex chain) ──────────────────────────────
+// ── Host ──────────────────────────────────────────────────────────────────
 
 :host {
   display: flex;
@@ -54,7 +54,7 @@
   cursor: pointer;
   box-shadow: 0 6px 32px rgba(37, 99, 235, 0.45);
   transition: background 0.15s, transform 0.1s;
-  padding-left: 3px; // optical center for play triangle
+  padding-left: 3px;
 
   &:hover {
     background: #1d4ed8;
@@ -101,6 +101,8 @@
   align-items: center;
   gap: 8px;
 }
+
+// ── Control buttons ───────────────────────────────────────────────────────
 
 .ctrl-btn {
   background: none;
@@ -149,9 +151,7 @@
   flex-shrink: 0;
   transition: background 0.15s;
 
-  &--on {
-    background: #e5e7eb;
-  }
+  &--on { background: #e5e7eb; }
 }
 
 .volume-slider {
@@ -160,6 +160,8 @@
   accent-color: #4f8ef7;
   margin-left: 4px;
 }
+
+// ── Speed selector ────────────────────────────────────────────────────────
 
 .speed-label {
   font-size: 11px;
@@ -184,207 +186,4 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 7px center;
-}
-
-// ── Timeline ──────────────────────────────────────────────────────────────
-
-.timeline {
-  padding: 10px 20px 14px;
-  background: #0d1018;
-  border-top: 1px solid #1a1d27;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.timeline-inner {
-  display: flex;
-  align-items: stretch;
-}
-
-.timeline-label-col {
-  width: 52px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.ruler-spacer {
-  height: 22px;
-}
-
-.track-label {
-  height: 46px;
-  display: flex;
-  align-items: center;
-  font-size: 11px;
-  color: #4b5563;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-}
-
-.timeline-measure {
-  flex: 1;
-  position: relative;
-  min-width: 0;
-  cursor: pointer;
-}
-
-// ── Ruler ──────────────────────────────────────────────────────────────
-
-.ruler {
-  height: 22px;
-  position: relative;
-}
-
-.ruler-tick {
-  position: absolute;
-  transform: translateX(-50%);
-  font-size: 10px;
-  color: #4b5563;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-
-  &:first-child {
-    transform: none; // flush with left edge
-  }
-
-  &:last-child {
-    transform: translateX(-100%); // flush with right edge
-  }
-}
-
-// ── Track ──────────────────────────────────────────────────────────────
-
-.track {
-  height: 46px;
-  position: relative;
-}
-
-.clip-block {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 0;
-  right: 0;
-  background: #3a5bbf;
-  border-radius: 5px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-}
-
-.trim-region {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.45);
-  pointer-events: none;
-  z-index: 2;
-
-  &--left  { left: 0; }
-  &--right { right: 0; }
-}
-
-.frame-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: rgba(10, 20, 60, 0.35);
-  pointer-events: none;
-  z-index: 1;
-}
-
-.clip-label {
-  position: relative;
-  z-index: 3;
-  padding: 0 10px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.82);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-
-.trim-handle {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 7px;
-  background: #7aabff;
-  z-index: 4;
-  cursor: ew-resize;
-
-  &--left  { left: 0;  border-radius: 5px 0 0 5px; }
-  &--right { right: 0; border-radius: 0 5px 5px 0; }
-}
-
-// ── Playhead ──────────────────────────────────────────────────────────
-
-.playhead {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.playhead-head {
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 10px solid #ef4444;
-  flex-shrink: 0;
-}
-
-.playhead-line {
-  flex: 1;
-  width: 2px;
-  background: #ef4444;
-}
-
-// ── Export bar ────────────────────────────────────────────────────────────
-
-.export-bar {
-  display: flex;
-  align-items: center;
-  padding: 11px 20px;
-  background: #0d0f15;
-  border-top: 1px solid #1a1d27;
-  gap: 16px;
-  flex-shrink: 0;
-}
-
-.export-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 16px;
-  background: #1a1e2e;
-  border: 1px solid #252a3e;
-  color: #c9d1d9;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
-
-  &:hover {
-    background: #202535;
-    border-color: #4f8ef7;
-  }
-}
-
-.export-preview {
-  font-size: 12px;
-  color: #4b5563;
-  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
 }
