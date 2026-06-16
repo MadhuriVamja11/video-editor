@@ -1,12 +1,11 @@
 import { Component, inject, OnDestroy, viewChild, ElementRef, effect, signal } from '@angular/core';
 import { VideoStateService } from '../../services/video-state.service';
-import { TimelineComponent } from '../timeline/timeline.component';
 import { formatTime } from '../../utils/time.utils';
 
 @Component({
   selector: 'app-video-player',
   standalone: true,
-  imports: [TimelineComponent],
+  imports: [],
   templateUrl: './video-player.component.html',
   styleUrl: './video-player.component.scss',
 })
@@ -28,7 +27,6 @@ export class VideoPlayerComponent implements OnDestroy {
   private rafId: number | null = null;
 
   constructor() {
-    // Load new video whenever the clip changes
     effect(() => {
       const clip  = this.clip();
       const video = this.videoEl()?.nativeElement;
@@ -37,19 +35,16 @@ export class VideoPlayerComponent implements OnDestroy {
       if (clip) video.load();
     });
 
-    // Keep video element volume in sync with the state signal
     effect(() => {
       const video = this.videoEl()?.nativeElement;
       if (video) video.volume = this.volume();
     });
 
-    // Keep video element playback speed in sync
     effect(() => {
       const video = this.videoEl()?.nativeElement;
       if (video) video.playbackRate = this.playbackRate();
     });
 
-    // Play or pause the video when the isPlaying signal flips
     effect(() => {
       const video = this.videoEl()?.nativeElement;
       if (!video) return;
@@ -110,14 +105,6 @@ export class VideoPlayerComponent implements OnDestroy {
   onSpeedChange(event: Event) {
     const val = Number.parseFloat((event.target as HTMLSelectElement).value);
     this.state.playbackRate.set(val);
-  }
-
-  // ── Seek — called when user clicks the timeline ────────────────────────
-
-  onSeek(time: number) {
-    const video = this.videoEl()?.nativeElement;
-    if (video) video.currentTime = time;
-    this.state.currentTime.set(time);
   }
 
   // ── Video events ───────────────────────────────────────────────────────
