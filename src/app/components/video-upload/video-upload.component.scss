@@ -4,6 +4,7 @@
   flex-direction: column;
   gap: 8px;
   flex: 1;
+  overflow-y: auto;
 }
 
 // ── Clip card ─────────────────────────────────────────────────────────────
@@ -13,10 +14,19 @@
   border: 1px solid #252a3e;
   border-radius: 10px;
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+  width: 100%;
+  padding: 0;
+  text-align: left;
 
   &:hover {
     border-color: #4f8ef7;
+  }
+
+  &--active {
+    border-color: #4f8ef7;
+    box-shadow: 0 0 0 2px rgba(79, 142, 247, 0.35);
   }
 }
 
@@ -28,6 +38,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative;
 }
 
 .clip-thumb {
@@ -42,12 +53,26 @@
   opacity: 0.7;
 }
 
+.clip-index {
+  position: absolute;
+  top: 5px;
+  left: 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 4px;
+  padding: 1px 5px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+}
+
 .clip-info {
-  padding: 8px 10px 10px;
+  padding: 7px 10px 9px;
 }
 
 .clip-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   color: #e5e7eb;
   overflow: hidden;
@@ -57,7 +82,7 @@
 }
 
 .clip-dur {
-  font-size: 11px;
+  font-size: 10px;
   color: #6b7280;
 }
 
@@ -66,7 +91,7 @@
 .drop-zone {
   border: 1.5px dashed #252a3e;
   border-radius: 10px;
-  padding: 22px 12px;
+  padding: 18px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -76,6 +101,7 @@
   color: #4b5563;
   font-size: 12px;
   text-align: center;
+  flex-shrink: 0;
 
   &:hover {
     border-color: #4f8ef7;

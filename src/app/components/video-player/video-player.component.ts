@@ -1,7 +1,6 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, inject, OnDestroy, viewChild, ElementRef, effect, signal } from '@angular/core';
+import { VideoStateService } from '../../services/video-state.service';
 import { formatTime } from '../../utils/time.utils';
-
-const FRAME_MARKERS = Array.from({ length: 11 }, (_, i) => ((i + 1) / 12) * 100);
 
 @Component({
   selector: 'app-video-player',
@@ -10,60 +9,137 @@ const FRAME_MARKERS = Array.from({ length: 11 }, (_, i) => ((i + 1) / 12) * 100)
   templateUrl: './video-player.component.html',
   styleUrl: './video-player.component.scss',
 })
-export class VideoPlayerComponent {
-  clip         = signal<any>(null);
-  isPlaying    = signal(false);
-  volume       = signal(1);
-  playbackRate = signal(1);
-  currentTime  = signal(0);
-  duration     = signal(0);
-  trimStart    = signal(0);
-  trimEnd      = signal(0);
-  isMuted      = signal(false);
+export class VideoPlayerComponent implements OnDestroy {
+  private readonly state = inject(VideoStateService);
+  private readonly videoEl = viewChild<ElementRef<HTMLVideoElement>>('videoEl');
 
-  readonly speeds       = [0.5, 1, 1.5, 2];
-  readonly frameMarkers = FRAME_MARKERS;
-  readonly formatTime   = formatTime;
+  readonly clip         = this.state.clip;
+  readonly isPlaying    = this.state.isPlaying;
+  readonly volume       = this.state.volume;
+  readonly playbackRate = this.state.playbackRate;
+  readonly currentTime  = this.state.currentTime;
+  readonly duration     = this.state.duration;
+  readonly isMuted      = signal(false);
 
-  readonly playheadPct = computed(() => {
-    const dur = this.duration();
-    return dur > 0 ? (this.currentTime() / dur) * 100 : 0;
-  });
+  readonly speeds     = [0.5, 1, 1.5, 2];
+  readonly formatTime = formatTime;
 
-  readonly trimLeftPct = computed(() => {
-    const dur = this.duration();
-    return dur > 0 ? (this.trimStart() / dur) * 100 : 0;
-  });
+  private rafId: number | null = null;
 
-  readonly trimRightPct = computed(() => {
-    const dur = this.duration();
-    return dur > 0 ? ((dur - this.trimEnd()) / dur) * 100 : 0;
-  });
+  constructor() {
+    effect(() => {
+      const clip  = this.clip();
+      const video = this.videoEl()?.nativeElement;
+      if (!video) return;
+      video.src = clip?.url ?? '';
+      if (clip) video.load();
+    });
 
-  readonly ticks = computed(() => {
-    const dur = this.duration();
-    if (dur <= 0) return [];
-    let interval: number;
-    if (dur <= 30) interval = 4;
-    else if (dur <= 90) interval = 10;
-    else if (dur <= 300) interval = 30;
-    else interval = 60;
-    const result: { label: string; pct: number }[] = [];
-    for (let t = 0; t <= dur; t += interval) {
-      result.push({ label: formatTime(t), pct: (t / dur) * 100 });
+    effect(() => {
+      const video = this.videoEl()?.nativeElement;
+      if (video) video.volume = this.volume();
+    });
+
+    effect(() => {
+      const video = this.videoEl()?.nativeElement;
+      if (video) video.playbackRate = this.playbackRate();
+    });
+
+    effect(() => {
+      const video = this.videoEl()?.nativeElement;
+      if (!video) return;
+
+      if (this.isPlaying()) {
+        video.play().catch(() => this.state.isPlaying.set(false));
+        this.startRaf();
+      } else {
+        video.pause();
+        this.stopRaf();
+      }
+    });
+  }
+
+  // ── Playback controls ──────────────────────────────────────────────────
+
+  togglePlay() {
+    if (!this.clip()) return;
+    this.state.isPlaying.set(!this.state.isPlaying());
+  }
+
+  skipBack() {
+    const video = this.videoEl()?.nativeElement;
+    if (!video) return;
+    const time = Math.max(0, video.currentTime - 5);
+    video.currentTime = time;
+    this.state.currentTime.set(time);
+  }
+
+  skipForward() {
+    const video = this.videoEl()?.nativeElement;
+    if (!video) return;
+    const time = Math.min(this.duration(), video.currentTime + 5);
+    video.currentTime = time;
+    this.state.currentTime.set(time);
+  }
+
+  // ── Volume ─────────────────────────────────────────────────────────────
+
+  onVolumeChange(event: Event) {
+    const vol = Number.parseFloat((event.target as HTMLInputElement).value);
+    this.state.volume.set(vol);
+    this.isMuted.set(vol === 0);
+    const video = this.videoEl()?.nativeElement;
+    if (video) video.muted = vol === 0;
+  }
+
+  toggleMute() {
+    const video = this.videoEl()?.nativeElement;
+    if (!video) return;
+    const muted = !this.isMuted();
+    this.isMuted.set(muted);
+    video.muted = muted;
+  }
+
+  // ── Playback speed ─────────────────────────────────────────────────────
+
+  onSpeedChange(event: Event) {
+    const val = Number.parseFloat((event.target as HTMLSelectElement).value);
+    this.state.playbackRate.set(val);
+  }
+
+  // ── Video events ───────────────────────────────────────────────────────
+
+  onVideoEnded() {
+    this.state.isPlaying.set(false);
+    this.state.currentTime.set(0);
+    const video = this.videoEl()?.nativeElement;
+    if (video) video.currentTime = 0;
+  }
+
+  // ── RAF loop — keeps currentTime signal in sync at ~60fps ──────────────
+
+  private startRaf() {
+    if (this.rafId !== null) return;
+
+    const tick = () => {
+      const video = this.videoEl()?.nativeElement;
+      if (video && !video.paused) {
+        this.state.currentTime.set(video.currentTime);
+      }
+      this.rafId = this.state.isPlaying() ? requestAnimationFrame(tick) : null;
+    };
+
+    this.rafId = requestAnimationFrame(tick);
+  }
+
+  private stopRaf() {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
-    return result;
-  });
+  }
 
-  readonly exportPreview = computed(() => '');
-
-  togglePlay()                         {}
-  skipBack()                           {}
-  skipForward()                        {}
-  onVolumeChange(_event: Event)        {}
-  toggleMute()                         {}
-  onSpeedChange(_event: Event)         {}
-  onTimelineClick(_event: MouseEvent)  {}
-  exportTrimJson()                     {}
-  onVideoEnded()                       {}
+  ngOnDestroy() {
+    this.stopRaf();
+  }
 }

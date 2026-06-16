@@ -1,6 +1,6 @@
 <div class="player-shell">
 
-  <!-- ── Video area ─────────────────────────────────────────────────── -->
+  <!-- ── Video area ──────────────────────────────────────────────────── -->
   <div class="video-area">
     <video #videoEl class="video-el" preload="auto" (ended)="onVideoEnded()"></video>
 
@@ -19,7 +19,7 @@
 
   @if (clip()) {
 
-    <!-- ── Controls bar ──────────────────────────────────────────────── -->
+    <!-- ── Controls bar ────────────────────────────────────────────────── -->
     <div class="controls-bar">
       <div class="controls-left">
 
@@ -83,64 +83,6 @@
           }
         </select>
       </div>
-    </div>
-
-    <!-- ── Timeline ──────────────────────────────────────────────────── -->
-    <div class="timeline">
-      <div class="timeline-inner">
-
-        <div class="timeline-label-col">
-          <div class="ruler-spacer"></div>
-          <div class="track-label">Video</div>
-        </div>
-
-        <div class="timeline-measure"
-             (click)="onTimelineClick($event)"
-             (keydown.arrowleft)="skipBack()"
-             (keydown.arrowright)="skipForward()">
-
-          <!-- Ruler -->
-          <div class="ruler">
-            @for (tick of ticks(); track tick.label) {
-              <span class="ruler-tick" [style.left.%]="tick.pct">{{ tick.label }}</span>
-            }
-          </div>
-
-          <!-- Clip track -->
-          <div class="track">
-            <div class="clip-block">
-              <div class="trim-region trim-region--left"  [style.width.%]="trimLeftPct()"></div>
-              <div class="trim-region trim-region--right" [style.width.%]="trimRightPct()"></div>
-              @for (pct of frameMarkers; track pct) {
-                <div class="frame-line" [style.left.%]="pct"></div>
-              }
-              <span class="clip-label">{{ clip()?.file?.name }}</span>
-              <div class="trim-handle trim-handle--left"  [style.left.%]="trimLeftPct()"></div>
-              <div class="trim-handle trim-handle--right" [style.right.%]="trimRightPct()"></div>
-            </div>
-          </div>
-
-          <!-- Playhead -->
-          <div class="playhead" [style.left.%]="playheadPct()">
-            <div class="playhead-head"></div>
-            <div class="playhead-line"></div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Export bar ─────────────────────────────────────────────────── -->
-    <div class="export-bar">
-      <button class="export-btn" (click)="exportTrimJson()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Export trim JSON
-      </button>
-      <span class="export-preview">{{ exportPreview() }}</span>
     </div>
 
   }
