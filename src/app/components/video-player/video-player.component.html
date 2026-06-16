@@ -75,11 +75,11 @@
         />
       </div>
 
-      <div class="controls-right">
+  <div class="controls-right">
         <label class="speed-label" for="speed-select">Speed</label>
         <select id="speed-select" class="speed-select" [value]="playbackRate()" (change)="onSpeedChange($event)">
           @for (speed of speeds; track speed) {
-            <option [value]="speed">{{ speed }}×</option>
+            <option [value]="speed" [selected]="playbackRate() === speed">{{ speed }}×</option>
           }
         </select>
       </div>
