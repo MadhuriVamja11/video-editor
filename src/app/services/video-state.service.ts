@@ -10,6 +10,8 @@ export class VideoStateService {
   readonly volume       = signal(1);
   readonly playbackRate = signal(1);
 
+  readonly videoElement = signal<HTMLVideoElement | null>(null);
+
   readonly clip     = computed(() => this.clips()[this.activeIndex()] ?? null);
   readonly duration = computed(() => this.clip()?.duration ?? 0);
 

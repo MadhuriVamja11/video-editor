@@ -1,0 +1,40 @@
+@if (clip()) {
+  <div class="timeline">
+
+    <div class="labels-col">
+      <div class="ruler-spacer"></div>
+      <div class="track-label">Video</div>
+      <div class="track-label">Audio</div>
+    </div>
+
+    <div class="tracks-col">
+
+      <!-- Time ruler -->
+      <div class="ruler">
+        @for (mark of timeMarks(); track mark.time) {
+          <div class="ruler-mark" [style.left.%]="mark.left">
+            <div class="ruler-tick"></div>
+            <span class="ruler-label">{{ formatTime(mark.time) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Video track: filmstrip of thumbnails -->
+      <div class="track-body video-track">
+        @for (thumb of thumbnails(); track $index) {
+          <img class="thumb" [src]="thumb" alt="" />
+        } @empty {
+          <div class="track-empty">Loading…</div>
+        }
+      </div>
+
+      <!-- Audio track: WaveSurfer waveform -->
+      <div class="track-body audio-track" #waveformContainer></div>
+
+      <!-- Playhead -->
+      <div class="playhead" [style.left.%]="playheadPct()"></div>
+
+    </div>
+
+  </div>
+}

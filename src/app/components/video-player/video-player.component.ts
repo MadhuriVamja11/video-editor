@@ -31,6 +31,7 @@ export class VideoPlayerComponent implements OnDestroy {
       const clip  = this.clip();
       const video = this.videoEl()?.nativeElement;
       if (!video) return;
+      this.state.videoElement.set(video);
       video.src = clip?.url ?? '';
       if (clip) video.load();
     });

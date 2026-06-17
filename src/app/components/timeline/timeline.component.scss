@@ -1,0 +1,154 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+  background: #0d0f15;
+  border-top: 1px solid #1e2235;
+}
+
+// ── Outer layout ───────────────────────────────────────────────────────────
+
+.timeline {
+  display: flex;
+  padding: 8px 12px 12px;
+  gap: 0;
+}
+
+.labels-col {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ruler-spacer {
+  height: 22px;
+}
+
+.track-label {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+
+// ── Tracks column ──────────────────────────────────────────────────────────
+
+.tracks-col {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+// ── Ruler ──────────────────────────────────────────────────────────────────
+
+.ruler {
+  position: relative;
+  height: 22px;
+  overflow: visible;
+}
+
+.ruler-mark {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+
+.ruler-tick {
+  width: 1px;
+  height: 5px;
+  background: #374151;
+}
+
+.ruler-label {
+  font-size: 10px;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+// ── Track bodies ───────────────────────────────────────────────────────────
+
+.track-body {
+  height: 56px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+// ── Video track ────────────────────────────────────────────────────────────
+
+.video-track {
+  display: flex;
+  background: #1a2130;
+  border: 1px solid #1e2a3d;
+
+  .thumb {
+    flex: 1;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .track-empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #374151;
+  }
+}
+
+// ── Audio track ────────────────────────────────────────────────────────────
+
+.audio-track {
+  background: #0c1220;
+  border: 1px solid #1a2235;
+
+  /* Let WaveSurfer fill the container */
+  ::ng-deep wave {
+    overflow: hidden !important;
+  }
+}
+
+// ── Playhead ───────────────────────────────────────────────────────────────
+
+.playhead {
+  position: absolute;
+  top: 22px; // align below ruler
+  bottom: 0;
+  width: 2px;
+  background: #ef4444;
+  pointer-events: none;
+  z-index: 10;
+  transform: translateX(-1px);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #ef4444;
+  }
+}
