@@ -5,6 +5,22 @@
       <span class="range">{{ formatTimeHMS(trimStart()) }} – {{ formatTimeHMS(trimEnd()) }}</span>
       <span class="dur">({{ formatTimeHMS(trimEnd() - trimStart()) }})</span>
     </div>
-    <button class="export-btn" (click)="exportJson()">Export JSON</button>
+
+    <div class="export-actions">
+      <button class="export-btn" (click)="exportJson()" [disabled]="exporting()">
+        Export JSON
+      </button>
+
+      <button class="export-btn export-btn--video" (click)="exportVideo()" [disabled]="exporting()">
+        @if (exporting()) {
+          <span class="progress-label">Exporting {{ exportProgress() }}%</span>
+          <span class="progress-bar">
+            <span class="progress-fill" [style.width.%]="exportProgress()"></span>
+          </span>
+        } @else {
+          Export Video
+        }
+      </button>
+    </div>
   </div>
 }
