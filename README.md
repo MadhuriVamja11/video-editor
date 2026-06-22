@@ -79,9 +79,13 @@ src/app/
 
 ## Getting Started
 
+**Branch:** `main`  
 **Prerequisites:** Node.js 18+ and Angular CLI installed.
 
 ```bash
+# Clone and switch to branch
+git checkout main
+
 # Install dependencies
 npm install
 
