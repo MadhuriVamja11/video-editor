@@ -114,6 +114,15 @@ export class TimelineComponent implements OnDestroy {
     }
   }
 
+  onTrackClick(event: MouseEvent) {
+    const el = event.currentTarget as HTMLElement;
+    const { left, width } = el.getBoundingClientRect();
+    const time = ((event.clientX - left) / width) * this.duration();
+    const video = this.state.videoElement();
+    if (video) video.currentTime = time;
+    this.state.currentTime.set(time);
+  }
+
   ngOnDestroy(): void {
     this.wavesurfer?.destroy();
   }

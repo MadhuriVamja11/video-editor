@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import { VideoStateService } from '../../services/video-state.service';
 import { VideoClip } from '../../models/video-clip.model';
 import { formatTime } from '../../utils/time.utils';
@@ -6,7 +7,7 @@ import { formatTime } from '../../utils/time.utils';
 @Component({
   selector: 'app-video-upload',
   standalone: true,
-  imports: [],
+  imports: [DragDropModule],
   templateUrl: './video-upload.component.html',
   styleUrl: './video-upload.component.scss',
 })
@@ -42,10 +43,19 @@ export class VideoUploadComponent {
     (event.target as HTMLInputElement).value = '';
   }
 
-  // ── Thumbnail click — switch active video ──────────────────────────────
+  // ── Clip list interactions ─────────────────────────────────────────────
 
   selectClip(index: number) {
     this.state.setActiveIndex(index);
+  }
+
+  drop(event: CdkDragDrop<VideoClip[]>) {
+    this.state.reorderClips(event.previousIndex, event.currentIndex);
+  }
+
+  removeClip(event: MouseEvent, index: number) {
+    event.stopPropagation();
+    this.state.removeClip(index);
   }
 
   // ── File loading ───────────────────────────────────────────────────────

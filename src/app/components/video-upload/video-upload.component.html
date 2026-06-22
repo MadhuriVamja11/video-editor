@@ -1,31 +1,50 @@
-<div class="clips-panel">
+﻿<div
+  class="clips-panel"
+  cdkDropList
+  (cdkDropListDropped)="drop($event)"
+>
 
   @for (c of clips(); track c.url; let i = $index) {
-    <button
-      class="clip-card"
-      [class.clip-card--active]="activeIndex() === i"
-      (click)="selectClip(i)"
-      [attr.aria-label]="'Play ' + c.file.name"
-    >
-      <div class="clip-preview">
-        @if (c.thumbnail) {
-          <img [src]="c.thumbnail" alt="" class="clip-thumb" />
-        } @else {
-          <svg class="clip-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-            <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
-            <line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/>
-            <line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/>
-          </svg>
-        }
-        <span class="clip-index">{{ i + 1 }}</span>
+    <div class="clip-card-wrapper" cdkDrag>
+
+      <button
+        class="clip-card"
+        [class.clip-card--active]="activeIndex() === i"
+        (click)="selectClip(i)"
+        [attr.aria-label]="'Play ' + c.file.name"
+      >
+        <div class="clip-preview">
+          @if (c.thumbnail) {
+            <img [src]="c.thumbnail" alt="" class="clip-thumb" />
+          } @else {
+            <img src="icons/film.svg" class="clip-icon" width="28" height="28" alt="" />
+          }
+          <span class="clip-index">{{ i + 1 }}</span>
+        </div>
+        <div class="clip-info">
+          <p class="clip-name">{{ c.file.name }}</p>
+          <p class="clip-dur">{{ formatTime(c.duration) }}</p>
+        </div>
+      </button>
+
+      <button
+        class="clip-remove"
+        (click)="removeClip($event, i)"
+        aria-label="Remove clip"
+        title="Remove clip"
+      >
+        <img src="icons/close.svg" width="10" height="10" alt="" />
+      </button>
+
+      <div class="clip-drag-handle">
+        <img src="icons/drag-handle.svg" width="12" height="12" alt="" />
       </div>
-      <div class="clip-info">
-        <p class="clip-name">{{ c.file.name }}</p>
-        <p class="clip-dur">{{ formatTime(c.duration) }}</p>
-      </div>
-    </button>
+
+      <ng-template cdkDragPlaceholder>
+        <div class="clip-drag-placeholder"></div>
+      </ng-template>
+
+    </div>
   }
 
   <label
@@ -35,13 +54,10 @@
     (dragleave)="onDragLeave($event)"
     (drop)="onDrop($event)"
   >
-    <svg class="drop-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="17 8 12 3 7 8"/>
-      <line x1="12" y1="3" x2="12" y2="15"/>
-    </svg>
+    <img src="icons/upload.svg" class="drop-icon" width="22" height="22" alt="" />
     <span>{{ clips().length === 0 ? 'Drop video here' : 'Add more videos' }}</span>
     <input type="file" accept="video/*" multiple (change)="onFileSelect($event)" hidden />
   </label>
 
 </div>
+

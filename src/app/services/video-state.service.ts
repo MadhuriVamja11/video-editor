@@ -36,6 +36,40 @@ export class VideoStateService {
     this.isPlaying.set(false);
   }
 
+  reorderClips(from: number, to: number) {
+    if (from === to) return;
+    const arr = [...this.clips()];
+    const [moved] = arr.splice(from, 1);
+    arr.splice(to, 0, moved);
+    const active = this.activeIndex();
+    this.clips.set(arr);
+    if (from === active) {
+      this.activeIndex.set(to);
+    } else if (from < active && to >= active) {
+      this.activeIndex.set(active - 1);
+    } else if (from > active && to <= active) {
+      this.activeIndex.set(active + 1);
+    }
+  }
+
+  removeClip(index: number) {
+    const arr = [...this.clips()];
+    arr.splice(index, 1);
+    const active = this.activeIndex();
+    this.clips.set(arr);
+    if (arr.length === 0) {
+      this.activeIndex.set(0);
+      this.currentTime.set(0);
+      this.isPlaying.set(false);
+    } else if (index < active) {
+      this.activeIndex.set(active - 1);
+    } else if (index === active) {
+      this.activeIndex.set(Math.min(active, arr.length - 1));
+      this.currentTime.set(0);
+      this.isPlaying.set(false);
+    }
+  }
+
   reset() {
     this.clips.set([]);
     this.activeIndex.set(0);
