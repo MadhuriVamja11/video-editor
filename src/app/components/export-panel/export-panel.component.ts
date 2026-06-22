@@ -23,18 +23,10 @@ export class ExportPanelComponent {
       endTime:   formatTimeHMS(this.trimEnd()),
     };
 
-    // Unique filename: trim_<video-name>_<YYYYMMDD-HHmmss>.json
-    const clipName = this.clip()?.file.name.replace(/\.[^.]+$/, '') ?? 'clip';
+    // Unique filename: trim_<clip-12chars>_<HHmmss>.json
+    const clipName = (this.clip()?.file.name.replace(/\.[^.]+$/, '') ?? 'clip').slice(0, 12);
     const now      = new Date();
-    const stamp    = [
-      now.getFullYear(),
-      String(now.getMonth() + 1).padStart(2, '0'),
-      String(now.getDate()).padStart(2, '0'),
-      '-',
-      String(now.getHours()).padStart(2, '0'),
-      String(now.getMinutes()).padStart(2, '0'),
-      String(now.getSeconds()).padStart(2, '0'),
-    ].join('');
+    const stamp    = `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
     const filename = `trim_${clipName}_${stamp}.json`;
 
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

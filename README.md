@@ -1,59 +1,133 @@
-# VideoEditor
+# Video Trim & Preview Editor — POC
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.4.
+**Author:** Madhuri Vamja · madhuri@simformsolutions.com  
+**Date:** June 2026  
+**Stack:** Angular 20 · Signals · WaveSurfer.js · Angular CDK · Canvas API
 
-## Development server
+---
 
-To start a local development server, run:
+## Overview
 
-```bash
-ng serve
+A browser-based video trim and preview editor built as a proof-of-concept. Upload a local video file, preview it with custom playback controls, trim it visually on a timeline with waveform display, and export the trim range as a JSON file — no backend or video encoding required.
+
+---
+
+## Demo
+
+![Video Trim Editor Demo](src/assets/demo.mp4)
+
+> **Evidence video:** See `src/assets/demo.mp4*` for a full walkthrough of upload → trim → export.
+
+---
+
+## Features
+
+| Feature | Status |
+|---|---|
+| Drag-and-drop or browse video upload | Done |
+| Thumbnail extraction from video frame (Canvas API) | Done |
+| Custom HTML5 player — play/pause, seek, volume, speed | Done |
+| Seek bar + current time / duration display (M:SS) | Done |
+| Playback speed selector (0.5×, 1×, 1.5×, 2×) | Done |
+| Timeline with adaptive time ruler (tick marks) | Done |
+| WaveSurfer.js audio waveform on timeline | Done |
+| Thumbnail filmstrip on timeline | Done |
+| Draggable trim handles (left = start, right = end) | Done |
+| Minimum trim gap enforcement (≥ 0.5 s) | Done |
+| Greyed-out regions outside trim range | Done |
+| Playback loops within trim bounds, pauses at trim end | Done |
+| Clip list with drag-to-reorder (Angular CDK) | Done |
+| Export trim as `{ startTime, endTime }` JSON file | Done |
+| Keyboard shortcut: Space = play/pause | Done |
+| No backend — runs entirely in the browser | Done |
+
+---
+
+## Architecture
+
+```
+src/app/
+├── services/
+│   └── video-state.service.ts     — Angular Signals state store (single source of truth)
+├── components/
+│   ├── video-upload/              — Drag-drop zone, file picker, clip list, thumbnail
+│   ├── video-player/              — Custom controls, RAF playhead sync, trim enforcement
+│   ├── timeline/                  — Ruler, filmstrip, WaveSurfer waveform, trim handles
+│   └── export-panel/              — JSON download button
+├── models/
+│   └── video-clip.model.ts        — VideoClip interface
+└── utils/
+    └── time.utils.ts              — formatTime (M:SS) and formatTimeHMS (HH:MM:SS)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+**State management:** Angular Signals — `signal()`, `computed()`, `effect()`. All components share a single `VideoStateService`; no NgRx or prop drilling.
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Tech Stack
 
-```bash
-ng generate component component-name
-```
+| Layer | Technology | Reason |
+|---|---|---|
+| Framework | Angular 20 (Standalone) | Team standard; Signals for reactive state |
+| Drag & Drop | Angular CDK | Official CDK, no extra deps |
+| Waveform | WaveSurfer.js 7 | Lightweight, MediaElement backend |
+| Thumbnails | Canvas API | Built-in, no library needed |
+| Video Playback | HTML5 Video API | Native browser support |
+| Styling | SCSS | Team standard |
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+---
 
-```bash
-ng generate --help
-```
+## Getting Started
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+**Prerequisites:** Node.js 18+ and Angular CLI installed.
 
 ```bash
-ng test
+# Install dependencies
+npm install
+
+# Start dev server
+npm start
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Open `http://localhost:4200` in your browser.
 
 ```bash
-ng e2e
+# Production build
+npm run build
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+## How to Use
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+1. **Upload** — drag a `.mp4` file onto the upload zone, or click **Browse**.
+2. **Preview** — the video loads with a thumbnail card and custom player controls.
+3. **Trim** — on the timeline, drag the **left handle** to set trim start and the **right handle** to set trim end. The greyed-out regions outside the handles are excluded.
+4. **Play trimmed clip** — playback is restricted to the trim range and loops automatically.
+5. **Export** — click **Export JSON** in the export panel to download `trim_<name>_<timestamp>.json`:
+
+```json
+{
+  "startTime": "00:00:05",
+  "endTime": "00:00:42"
+}
+```
+
+---
+
+## Key Implementation Notes
+
+- **Trim boundary enforcement:** The RAF (requestAnimationFrame) loop runs at ~60 fps and pauses playback as soon as `currentTime >= trimEnd`, ensuring frame-accurate stopping without relying on the lower-frequency `timeupdate` event.
+- **Seek bar / playhead sync:** Direct DOM writes during RAF avoid Angular binding conflicts when the user is actively dragging the seek thumb.
+- **WaveSurfer integration:** Uses the MediaElement backend so the waveform shares the same `<video>` element; no double-decode overhead.
+- **Memory safety:** `URL.revokeObjectURL()` is called on each re-upload to prevent blob URL leaks.
+- **Thumbnail filmstrip:** 2–12 thumbnails are generated asynchronously by seeking the video element to evenly-spaced timestamps and capturing Canvas frames.
+-
+
+## Out of Scope (POC)
+
+- Actual video rendering or encoding
+- Multi-track timeline
+- Cloud upload or backend integration
+- Audio-only waveform editing
+- Mobile / responsive layout
