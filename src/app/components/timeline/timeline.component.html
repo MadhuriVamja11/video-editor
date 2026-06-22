@@ -7,7 +7,7 @@
       <div class="track-label">Audio</div>
     </div>
 
-    <div class="tracks-col" (click)="onTrackClick($event)">
+    <div class="tracks-col" #tracksCol (click)="onTrackClick($event)">
 
       <!-- Time ruler -->
       <div class="ruler">
@@ -19,7 +19,7 @@
         }
       </div>
 
-      <!-- Video track: filmstrip of thumbnails -->
+      <!-- Video track: filmstrip thumbnails -->
       <div class="track-body video-track">
         @for (thumb of thumbnails(); track $index) {
           <img class="thumb" [src]="thumb" alt="" />
@@ -30,6 +30,26 @@
 
       <!-- Audio track: WaveSurfer waveform -->
       <div class="track-body audio-track" #waveformContainer></div>
+
+      <!-- Grey overlay: region before trim start -->
+      <div class="trim-overlay"
+           [style.left]="'0'"
+           [style.width.%]="trimStartPct()"></div>
+
+      <!-- Grey overlay: region after trim end -->
+      <div class="trim-overlay"
+           [style.left.%]="trimEndPct()"
+           [style.width.%]="100 - trimEndPct()"></div>
+
+      <!-- Left trim handle (drag to set start) -->
+      <div class="trim-handle trim-handle--left"
+           [style.left.%]="trimStartPct()"
+           (mousedown)="startTrimDrag($event, 'start')"></div>
+
+      <!-- Right trim handle (drag to set end) -->
+      <div class="trim-handle trim-handle--right"
+           [style.left.%]="trimEndPct()"
+           (mousedown)="startTrimDrag($event, 'end')"></div>
 
       <!-- Playhead -->
       <div class="playhead" [style.left.%]="playheadPct()"></div>

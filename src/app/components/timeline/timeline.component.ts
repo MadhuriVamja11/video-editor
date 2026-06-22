@@ -13,11 +13,14 @@ import { formatTime } from '../../utils/time.utils';
 export class TimelineComponent implements OnDestroy {
   private readonly state = inject(VideoStateService);
 
-  readonly waveformEl = viewChild<ElementRef<HTMLDivElement>>('waveformContainer');
+  readonly waveformEl  = viewChild<ElementRef<HTMLDivElement>>('waveformContainer');
+  readonly tracksColEl = viewChild<ElementRef<HTMLDivElement>>('tracksCol');
 
   readonly clip        = this.state.clip;
   readonly currentTime = this.state.currentTime;
   readonly duration    = this.state.duration;
+  readonly trimStart   = this.state.trimStart;
+  readonly trimEnd     = this.state.trimEnd;
   readonly formatTime  = formatTime;
 
   private wavesurfer: WaveSurfer | null = null;
@@ -26,6 +29,16 @@ export class TimelineComponent implements OnDestroy {
   readonly playheadPct = computed(() => {
     const dur = this.duration();
     return dur > 0 ? (this.currentTime() / dur) * 100 : 0;
+  });
+
+  readonly trimStartPct = computed(() => {
+    const dur = this.duration();
+    return dur > 0 ? (this.trimStart() / dur) * 100 : 0;
+  });
+
+  readonly trimEndPct = computed(() => {
+    const dur = this.duration();
+    return dur > 0 ? (this.trimEnd() / dur) * 100 : 100;
   });
 
   readonly timeMarks = computed(() => {
@@ -92,7 +105,7 @@ export class TimelineComponent implements OnDestroy {
     try {
       await new Promise<void>((resolve, reject) => {
         vid.addEventListener('loadedmetadata', () => resolve(), { once: true });
-        vid.addEventListener('error', () => reject(), { once: true });
+        vid.addEventListener('error', () => reject(new Error('video load failed')), { once: true });
       });
 
       const canvas  = document.createElement('canvas');
@@ -114,6 +127,7 @@ export class TimelineComponent implements OnDestroy {
     }
   }
 
+  // Click anywhere on track to seek
   onTrackClick(event: MouseEvent) {
     const el = event.currentTarget as HTMLElement;
     const { left, width } = el.getBoundingClientRect();
@@ -121,6 +135,37 @@ export class TimelineComponent implements OnDestroy {
     const video = this.state.videoElement();
     if (video) video.currentTime = time;
     this.state.currentTime.set(time);
+  }
+
+  // Drag a trim handle left or right
+  startTrimDrag(event: MouseEvent, handle: 'start' | 'end') {
+    event.preventDefault();
+    event.stopPropagation(); // don't trigger track click / seek
+
+    const tracksEl = this.tracksColEl()?.nativeElement;
+    if (!tracksEl) return;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = tracksEl.getBoundingClientRect();
+      const pct  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const time = pct * this.duration();
+
+      if (handle === 'start') {
+        // Keep at least 0.5s gap from trim end
+        this.state.trimStart.set(Math.max(0, Math.min(time, this.state.trimEnd() - 0.5)));
+      } else {
+        // Keep at least 0.5s gap from trim start
+        this.state.trimEnd.set(Math.max(this.state.trimStart() + 0.5, Math.min(time, this.duration())));
+      }
+    };
+
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
   }
 
   ngOnDestroy(): void {

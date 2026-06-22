@@ -161,6 +161,22 @@
   margin-left: 4px;
 }
 
+// ── Seek bar ──────────────────────────────────────────────────────────────
+
+.seek-wrap {
+  padding: 6px 20px 0;
+  background: #12141d;
+  flex-shrink: 0;
+}
+
+.seek-bar {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  accent-color: #4f8ef7;
+  display: block;
+}
+
 // ── Speed selector ────────────────────────────────────────────────────────
 
 .speed-label {

@@ -9,6 +9,8 @@ export class VideoStateService {
   readonly isPlaying    = signal(false);
   readonly volume       = signal(1);
   readonly playbackRate = signal(1);
+  readonly trimStart    = signal(0);
+  readonly trimEnd      = signal(0);
 
   readonly videoElement = signal<HTMLVideoElement | null>(null);
 
@@ -26,6 +28,8 @@ export class VideoStateService {
       this.activeIndex.set(0);
       this.currentTime.set(0);
       this.isPlaying.set(false);
+      this.trimStart.set(0);
+      this.trimEnd.set(clip.duration);
     }
   }
 
@@ -34,6 +38,9 @@ export class VideoStateService {
     this.activeIndex.set(index);
     this.currentTime.set(0);
     this.isPlaying.set(false);
+    const clip = this.clips()[index];
+    this.trimStart.set(0);
+    this.trimEnd.set(clip.duration);
   }
 
   reorderClips(from: number, to: number) {
@@ -61,12 +68,17 @@ export class VideoStateService {
       this.activeIndex.set(0);
       this.currentTime.set(0);
       this.isPlaying.set(false);
+      this.trimStart.set(0);
+      this.trimEnd.set(0);
     } else if (index < active) {
       this.activeIndex.set(active - 1);
     } else if (index === active) {
-      this.activeIndex.set(Math.min(active, arr.length - 1));
+      const newIndex = Math.min(active, arr.length - 1);
+      this.activeIndex.set(newIndex);
       this.currentTime.set(0);
       this.isPlaying.set(false);
+      this.trimStart.set(0);
+      this.trimEnd.set(arr[newIndex].duration);
     }
   }
 
@@ -77,5 +89,7 @@ export class VideoStateService {
     this.isPlaying.set(false);
     this.volume.set(1);
     this.playbackRate.set(1);
+    this.trimStart.set(0);
+    this.trimEnd.set(0);
   }
 }

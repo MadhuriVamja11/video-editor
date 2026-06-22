@@ -10,8 +10,9 @@ import { formatTime } from '../../utils/time.utils';
   styleUrl: './video-player.component.scss',
 })
 export class VideoPlayerComponent implements OnDestroy {
-  private readonly state = inject(VideoStateService);
-  private readonly videoEl = viewChild<ElementRef<HTMLVideoElement>>('videoEl');
+  private readonly state    = inject(VideoStateService);
+  private readonly videoEl  = viewChild<ElementRef<HTMLVideoElement>>('videoEl');
+  private readonly seekBarEl = viewChild<ElementRef<HTMLInputElement>>('seekBar');
 
   readonly clip         = this.state.clip;
   readonly isPlaying    = this.state.isPlaying;
@@ -27,6 +28,7 @@ export class VideoPlayerComponent implements OnDestroy {
   private rafId: number | null = null;
 
   constructor() {
+    // Load video src when clip or element changes
     effect(() => {
       const clip  = this.clip();
       const video = this.videoEl()?.nativeElement;
@@ -36,21 +38,28 @@ export class VideoPlayerComponent implements OnDestroy {
       if (clip) video.load();
     });
 
+    // Sync volume to video element
     effect(() => {
       const video = this.videoEl()?.nativeElement;
       if (video) video.volume = this.volume();
     });
 
+    // Sync playback rate to video element
     effect(() => {
       const video = this.videoEl()?.nativeElement;
       if (video) video.playbackRate = this.playbackRate();
     });
 
+    // Play / pause based on isPlaying signal
     effect(() => {
       const video = this.videoEl()?.nativeElement;
       if (!video) return;
 
       if (this.isPlaying()) {
+        // If at or past trimEnd, jump back to trimStart before playing
+        if (video.currentTime >= this.state.trimEnd()) {
+          video.currentTime = this.state.trimStart();
+        }
         video.play().catch(() => this.state.isPlaying.set(false));
         this.startRaf();
       } else {
@@ -60,7 +69,7 @@ export class VideoPlayerComponent implements OnDestroy {
     });
   }
 
-  // ── Playback controls ──────────────────────────────────────────────────
+  // ── Playback controls ──────────────────────────────────────────────────────
 
   togglePlay() {
     if (!this.clip()) return;
@@ -73,6 +82,7 @@ export class VideoPlayerComponent implements OnDestroy {
     const time = Math.max(0, video.currentTime - 5);
     video.currentTime = time;
     this.state.currentTime.set(time);
+    this.syncSeekBar(time);
   }
 
   skipForward() {
@@ -81,9 +91,17 @@ export class VideoPlayerComponent implements OnDestroy {
     const time = Math.min(this.duration(), video.currentTime + 5);
     video.currentTime = time;
     this.state.currentTime.set(time);
+    this.syncSeekBar(time);
   }
 
-  // ── Volume ─────────────────────────────────────────────────────────────
+  onSeek(event: Event) {
+    const time = parseFloat((event.target as HTMLInputElement).value);
+    const video = this.videoEl()?.nativeElement;
+    if (video) video.currentTime = time;
+    this.state.currentTime.set(time);
+  }
+
+  // ── Volume ─────────────────────────────────────────────────────────────────
 
   onVolumeChange(event: Event) {
     const vol = Number.parseFloat((event.target as HTMLInputElement).value);
@@ -101,23 +119,25 @@ export class VideoPlayerComponent implements OnDestroy {
     video.muted = muted;
   }
 
-  // ── Playback speed ─────────────────────────────────────────────────────
+  // ── Playback speed ─────────────────────────────────────────────────────────
 
   onSpeedChange(event: Event) {
     const val = Number.parseFloat((event.target as HTMLSelectElement).value);
     this.state.playbackRate.set(val);
   }
 
-  // ── Video events ───────────────────────────────────────────────────────
+  // ── Video events ───────────────────────────────────────────────────────────
 
   onVideoEnded() {
+    const trimStart = this.state.trimStart();
     this.state.isPlaying.set(false);
-    this.state.currentTime.set(0);
+    this.state.currentTime.set(trimStart);
     const video = this.videoEl()?.nativeElement;
-    if (video) video.currentTime = 0;
+    if (video) video.currentTime = trimStart;
+    this.syncSeekBar(trimStart);
   }
 
-  // ── RAF loop — keeps currentTime signal in sync at ~60fps ──────────────
+  // ── RAF loop — syncs seek bar and enforces trim end at ~60fps ──────────────
 
   private startRaf() {
     if (this.rafId !== null) return;
@@ -125,8 +145,24 @@ export class VideoPlayerComponent implements OnDestroy {
     const tick = () => {
       const video = this.videoEl()?.nativeElement;
       if (video && !video.paused) {
-        this.state.currentTime.set(video.currentTime);
+        const time = video.currentTime;
+
+        // Reached trim end — pause and reset to trim start
+        if (time >= this.state.trimEnd()) {
+          const trimStart = this.state.trimStart();
+          video.pause();
+          video.currentTime = trimStart;
+          this.state.currentTime.set(trimStart);
+          this.state.isPlaying.set(false);
+          this.syncSeekBar(trimStart);
+          this.rafId = null;
+          return;
+        }
+
+        this.state.currentTime.set(time);
+        this.syncSeekBar(time);
       }
+
       this.rafId = this.state.isPlaying() ? requestAnimationFrame(tick) : null;
     };
 
@@ -137,6 +173,14 @@ export class VideoPlayerComponent implements OnDestroy {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
+    }
+  }
+
+  // Update seek bar DOM value directly to avoid fighting Angular binding during drag
+  private syncSeekBar(time: number) {
+    const seekBar = this.seekBarEl()?.nativeElement;
+    if (seekBar && document.activeElement !== seekBar) {
+      seekBar.value = String(time);
     }
   }
 

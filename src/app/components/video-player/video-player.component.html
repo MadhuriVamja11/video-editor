@@ -16,6 +16,21 @@
 
   @if (clip()) {
 
+    <!-- Seek bar -->
+    <div class="seek-wrap">
+      <input
+        #seekBar
+        type="range"
+        class="seek-bar"
+        min="0"
+        [max]="duration()"
+        step="any"
+        (input)="onSeek($event)"
+        aria-label="Seek"
+      />
+    </div>
+
+    <!-- Controls -->
     <div class="controls-bar">
       <div class="controls-left">
 
