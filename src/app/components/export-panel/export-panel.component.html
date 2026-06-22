@@ -2,8 +2,8 @@
   <div class="export-bar">
     <div class="trim-info">
       <span class="label">Trim</span>
-      <span class="range">{{ formatTime(trimStart()) }} – {{ formatTime(trimEnd()) }}</span>
-      <span class="dur">({{ formatTime(trimEnd() - trimStart()) }})</span>
+      <span class="range">{{ formatTimeHMS(trimStart()) }} – {{ formatTimeHMS(trimEnd()) }}</span>
+      <span class="dur">({{ formatTimeHMS(trimEnd() - trimStart()) }})</span>
     </div>
     <button class="export-btn" (click)="exportJson()">Export JSON</button>
   </div>
