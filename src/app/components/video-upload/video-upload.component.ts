@@ -68,17 +68,32 @@ export class VideoUploadComponent {
     video.preload = 'metadata';
     video.src = url;
 
+    let actualDuration = 0;
+
     video.addEventListener('loadedmetadata', () => {
       if (!Number.isFinite(video.duration) || video.duration <= 0) {
-        console.warn('VideoUpload: could not determine duration for', file.name);
+        // Some WebM files (e.g. YouTube downloads) report Infinity duration because the
+        // encoder never wrote the total length. Seeking past the end forces the browser
+        // to scan to the real end; video.currentTime after seeked gives the true length.
+        video.currentTime = 1e101;
         return;
       }
+      actualDuration = video.duration;
       video.currentTime = video.duration * 0.1;
     });
 
     video.addEventListener('seeked', () => {
+      if (actualDuration === 0) {
+        actualDuration = video.currentTime;
+        if (actualDuration <= 0) {
+          console.warn('VideoUpload: could not determine duration for', file.name);
+          return;
+        }
+        video.currentTime = actualDuration * 0.1;
+        return;
+      }
       const thumbnail = this.extractThumbnail(video);
-      const clip: VideoClip = { file, url, duration: video.duration, thumbnail };
+      const clip: VideoClip = { file, url, duration: actualDuration, thumbnail };
       this.state.addClip(clip);
     });
   }
