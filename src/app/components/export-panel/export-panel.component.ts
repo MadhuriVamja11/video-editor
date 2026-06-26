@@ -40,22 +40,7 @@ export class ExportPanelComponent {
     a.click();
     URL.revokeObjectURL(url);
   }
-
-  // WHY THIS IS SLOW:
-  //   Uses captureStream() + MediaRecorder which records the video in real-time.
-  //   The video must physically play at 1× speed for frames to be captured —
-  //   a 30-second trim takes ~30 seconds to export. There is no way to speed
-  //   this up with this approach; it is fundamentally bound to playback speed.
-  //
-  // ADDITIONAL LIMITATIONS:
-  //   - captureStream() is NOT supported on iOS Safari (mobile export broken).
-  //   - Firefox Android support is partial/unreliable.
-  //   - Output is always WebM regardless of input format.
-  //
-  // FASTER ALTERNATIVE (not implemented — requires ~30 MB WASM download on first use):
-  //   FFmpeg.wasm (@ffmpeg/ffmpeg) processes the file directly without real-time playback.
-  //   A 30-second trim drops to ~2–5 seconds. Supports all browsers incl. iOS Safari.
-  //   Trade-off: ~30 MB cold download from CDN + needs COOP/COEP headers for multi-threading.
+  
   async exportVideo() {
     const clip = this.clip();
     if (!clip || this.exporting()) return;
